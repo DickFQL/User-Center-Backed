@@ -24,6 +24,7 @@ import static com.fantasy.yupiproject1.constant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = {"http://101.133.226.57"},allowCredentials = "true")
 public class UserController {
 
     @Resource
@@ -60,10 +61,33 @@ public class UserController {
         return ResultUtils.success(user);
     }
 
+    /**
+     * 用户注销
+     * @param request
+     * @return
+     */
     @PostMapping("/logout")
     public BaseResponse<Integer> userLogout(HttpServletRequest request){
-        if (request != null) return null;
+        if (request == null) return null;
         return  ResultUtils.success(userService.userLogout(request));
+    }
+
+    /**
+     * 获取当前用户
+     * @param request
+     * @return
+     */
+    @GetMapping("/current")
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request){
+        Object object = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) object;
+        if(currentUser == null){
+            return null;
+        }
+        long userId = currentUser.getId();
+        User byId = userService.getById(userId);
+        User safetyUser = userService.getSafetyUser(byId);
+        return ResultUtils.success(safetyUser);
     }
 
     @GetMapping("/search")
@@ -98,7 +122,7 @@ public class UserController {
     public boolean isAdmin(HttpServletRequest request){
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User user = (User)userObj;
-        if (user!=null || user.getUserRole() != ADMIN_ROLE ) return false;
+        if (user !=null || user.getUserRole() != ADMIN_ROLE ) return false;
         return userService.removeById(true);
     }
 

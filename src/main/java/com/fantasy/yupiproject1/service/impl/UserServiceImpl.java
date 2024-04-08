@@ -104,7 +104,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userPassword",encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
         if (user ==null) {
-            log.info("user login fail,userAccount donot match userPassword");
+            log.info("user login fail,userAccount don't match userPassword");
             return null;
         }
 
