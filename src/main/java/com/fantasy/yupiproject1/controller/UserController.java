@@ -49,13 +49,13 @@ public class UserController {
     @PostMapping("/login")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request){
         if (userLoginRequest == null){
-            return null;
+            throw  new BusinessException(ErrorCode.PARAM_ERROR);
         }
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
 
         if (StringUtils.isAnyBlank(userAccount,userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         User user = userService.userLogin(userAccount, userPassword, request);
         return ResultUtils.success(user);
@@ -68,7 +68,7 @@ public class UserController {
      */
     @PostMapping("/logout")
     public BaseResponse<Integer> userLogout(HttpServletRequest request){
-        if (request == null) return null;
+        if (request == null) throw new BusinessException(ErrorCode.PARAM_ERROR);
         return  ResultUtils.success(userService.userLogout(request));
     }
 
@@ -82,7 +82,7 @@ public class UserController {
         Object object = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) object;
         if(currentUser == null){
-            return null;
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         long userId = currentUser.getId();
         User byId = userService.getById(userId);
@@ -94,7 +94,7 @@ public class UserController {
     public BaseResponse<List<User>> searchUser(String userName, HttpServletRequest request){
         //仅管理员能查询
         if (!isAdmin(request)){
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"请求参数为空");
+            throw new BusinessException(ErrorCode.NOT_AUTH,"非管理员权限");
         }
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -112,9 +112,9 @@ public class UserController {
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request){
         //仅管理员能查询
-        if (!isAdmin(request)){return null;}
+        if (!isAdmin(request)){throw new BusinessException(ErrorCode.NOT_AUTH,"非管理员权限") ;}
         if(id <= 0){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"参数为负数");
         }
         return  ResultUtils.success(userService.removeById(id));
     }

@@ -60,7 +60,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userAccount",userAccout);
         long count = this.count(queryWrapper);
         if (count > 0){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号重复");
         }
         // 星球编号不能重复
         queryWrapper = new QueryWrapper<>();
@@ -77,7 +77,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(encryptPassword);
         user.setPlanetCode(planetCode);
         boolean save = this.save(user);
-        if (!save) return -1;
+        if (!save) throw new BusinessException(ErrorCode.PARAM_ERROR,"插入失败");
         return user.getId();
     }
 
@@ -87,15 +87,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1.校验用户账户、密码、确认密码、是否符合要求
         //判断三者非空，apache.commons.lang3包下的函数
         if(StringUtils.isAnyBlank(userAccout,userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"参数为空");
         }
         //账号长度不小于4位
-        if (userAccout.length()<4) return null;
+        if (userAccout.length()<4) throw new BusinessException(ErrorCode.PARAM_ERROR,"账号长度过短");
         //账号密码不小于8位
-        if (userPassword.length()<8 ) return null;
+        if (userPassword.length()<8 ) throw new BusinessException(ErrorCode.PARAM_ERROR,"密码长度过短");
         //账户不包含特殊字符
         String regEx = "[`\\s~!@#$%^&*()+=|{}:;\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？']";
-        if (Pattern.compile(regEx).matcher(userAccout).find()) return null;
+        if (Pattern.compile(regEx).matcher(userAccout).find()) throw new BusinessException(ErrorCode.PARAM_ERROR,"账户存在特殊字符");
         //对密码加密
         String encryptPassword = DigestUtils.md5DigestAsHex(userPassword.getBytes());
         //账户密码是否输入正确
@@ -105,7 +105,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = userMapper.selectOne(queryWrapper);
         if (user ==null) {
             log.info("user login fail,userAccount don't match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号或密码错误");
         }
 
         //3.数据脱敏
